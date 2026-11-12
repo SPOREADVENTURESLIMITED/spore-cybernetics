@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient } from "../generated/client/client";
+import { PrismaClient } from "../generated/node-client/client";
 import { serviceSeed } from "../lib/catalog";
 
 function requiredEnv(name: string): string {
