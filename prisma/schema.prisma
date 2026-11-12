@@ -28,4 +28,5 @@ enum RequestStatus {
   QUOTED
   IN_PROGRESS
   COMPLETED
+  CANCELLED
 }
