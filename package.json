@@ -57,6 +57,7 @@
   },
   "overrides": {
     "postcss": "^8.5.32",
-    "fflate": "^0.8.2"
+    "fflate": "^0.8.2",
+    "deepmerge-ts": "^8.0.2"
   }
 }
