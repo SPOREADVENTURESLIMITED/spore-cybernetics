@@ -4,13 +4,18 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "../generated/client/client";
 import { serviceSeed } from "../lib/catalog";
 
-const connectionString = process.env.DATABASE_URL;
-const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-const password = process.env.ADMIN_PASSWORD;
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} is required.`);
+  return value;
+}
 
-if (!connectionString) throw new Error("DATABASE_URL is required.");
-if (!email || !password || password.length < 16) {
-  throw new Error("Set ADMIN_EMAIL and an ADMIN_PASSWORD of at least 16 characters.");
+const connectionString = requiredEnv("DATABASE_URL");
+const email = requiredEnv("ADMIN_EMAIL").trim().toLowerCase();
+const password = requiredEnv("ADMIN_PASSWORD");
+
+if (password.length < 16) {
+  throw new Error("ADMIN_PASSWORD must be at least 16 characters.");
 }
 
 const prisma = new PrismaClient({
