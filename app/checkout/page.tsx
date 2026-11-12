@@ -1,0 +1,2 @@
+import {CheckoutClient} from "@/components/checkout-client";
+export default function Checkout(){return <main className="shell" style={{maxWidth:760}}><div className="pagehead"><div className="eyebrow">SECURE ORDER REQUEST</div><h1>Review your <span style={{color:"var(--green)"}}>cart.</span></h1><p className="muted">Submit your order details. The team will confirm fulfilment and payment instructions.</p></div><CheckoutClient/></main>}
