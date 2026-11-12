@@ -1,0 +1,32 @@
+name: Prepare Spore Cybernetics Database
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+      - name: Apply additive database schema
+        run: npx prisma db push
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+      - name: Seed services and administrator
+        run: npm run db:seed
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
