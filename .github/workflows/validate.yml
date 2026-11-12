@@ -1,0 +1,29 @@
+name: Validate Spore Cybernetics
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+      - name: Build Worker
+        run: npm run build:vinext
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
