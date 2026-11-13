@@ -1,6 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<rect width="512" height="512" rx="112" fill="#07100f"/>
-<circle cx="256" cy="256" r="170" fill="none" stroke="#76f0b1" stroke-width="10" opacity=".7"/>
-<path d="M150 338V174h120c62 0 96 30 96 82s-34 82-96 82h-48v-52h46c27 0 42-10 42-30s-15-30-42-30h-64v112z" fill="#76f0b1"/>
-<circle cx="364" cy="148" r="16" fill="#65c8ff"/>
-</svg>
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#02091d"/><stop offset=".55" stop-color="#071b48"/><stop offset="1" stop-color="#02091b"/></linearGradient>
+ <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#04e9ff"/><stop offset=".48" stop-color="#087aff"/><stop offset="1" stop-color="#102b91"/></linearGradient>
+ <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".45" stop-color="#8bcaff"/><stop offset="1" stop-color="#2352a7"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <clipPath id="clip"><rect x="12" y="12" width="488" height="488" rx="104"/></clipPath>
+</defs>
+<g clip-path="url(#clip)">
+<rect width="512" height="512" fill="url(#bg)"/>
+<g stroke="#08cfff" stroke-width="3" fill="none" opacity=".65"><path d="M0 90h82l30-30h68M0 142h45l28-28h42M512 80h-75l-27 27h-36M512 135h-38l-24 24h-35M0 370h55l24 24h46M512 360h-55l-25 25h-42"/></g>
+<g fill="#09cfff" filter="url(#glow)"><circle cx="180" cy="60" r="5"/><circle cx="112" cy="114" r="5"/><circle cx="400" cy="107" r="5"/><circle cx="390" cy="159" r="5"/></g>
+<circle cx="222" cy="218" r="126" fill="none" stroke="url(#blue)" stroke-width="22"/>
+<circle cx="222" cy="218" r="105" fill="#063c91" stroke="#48dcff" stroke-width="3"/>
+<path d="M177 139l26 9 7 24-16 21 7 24-22 22-22-32 9-32zm78 0 27 18 6 31-24 14-17-21zm-42 100 30-14 28 20-5 44-27 20-29-27z" fill="#f3fbff"/>
+<path d="M88 229C118 95 330 58 421 165c54 64-24 169-152 194-91 18-180-8-202-65" fill="none" stroke="url(#blue)" stroke-width="24" stroke-linecap="round"/>
+<path d="M94 274c78-88 255-119 327-57" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+<g transform="translate(300 92)" filter="url(#glow)">
+ <path d="M60 7c62 0 100 41 100 103v69l-27 34-4 53-47 28-41-16-16-38-31-23 18-42V87C12 39 30 7 60 7Z" fill="url(#metal)" stroke="#09d9ff" stroke-width="5"/>
+ <path d="M27 107q31-34 68-5l-13 20-50 3z" fill="#031331"/>
+ <path d="M35 111l34-7-19 15z" fill="#00f4ff"/>
+ <circle cx="119" cy="83" r="38" fill="#061a48" stroke="#16cfff" stroke-width="9"/>
+ <circle cx="119" cy="83" r="20" fill="none" stroke="#168dff" stroke-width="7"/>
+ <circle cx="119" cy="83" r="7" fill="#fff"/>
+ <path d="M42 176l48 9-29 15m-17 18 42-3" fill="none" stroke="#174b91" stroke-width="8" stroke-linecap="round"/>
+</g>
+<path d="M70 342h372v112H70z" fill="#02091d" opacity=".94"/>
+<text x="256" y="398" text-anchor="middle" font-family="Arial,sans-serif" font-size="64" font-weight="900" letter-spacing="-4" fill="url(#metal)">SPORE</text>
+<text x="256" y="433" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="800" letter-spacing="2" fill="#06dfff">CYBERNETICS</text>
+<rect x="12" y="12" width="488" height="488" rx="104" fill="none" stroke="#08dfff" stroke-width="8" filter="url(#glow)"/>
+</g></svg>
