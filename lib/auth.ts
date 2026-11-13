@@ -6,7 +6,9 @@ import { prisma } from "@/lib/prisma";
 const COOKIE = "spore_session";
 
 function getSessionSecret(): Uint8Array {
-  const value = env.AUTH_SECRET;
+  // Cloudflare's generated Env type currently declares DATABASE_URL only.
+  // Keep the secret as a runtime binding without weakening the fail-closed check.
+  const value = (env as typeof env & { AUTH_SECRET?: string }).AUTH_SECRET;
   if (!value || value.length < 32) {
     throw new Error("Cloudflare AUTH_SECRET is missing or too short. Configure a random secret of at least 32 characters.");
   }
