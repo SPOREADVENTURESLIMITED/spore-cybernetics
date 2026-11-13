@@ -36,10 +36,12 @@ export async function clearSession() {
 }
 
 export async function getCurrentUser() {
-  const token = (await cookies()).get(COOKIE)?.value;
-  if (!token) return null;
-
   try {
+    // Cookie access can throw in a request context that lacks a session store.
+    // Treat that as an unauthenticated request rather than crashing protected pages.
+    const token = (await cookies()).get(COOKIE)?.value;
+    if (!token) return null;
+
     const { payload } = await jwtVerify(token, getSessionSecret());
     if (!payload.sub) return null;
     return await prisma.user.findUnique({
