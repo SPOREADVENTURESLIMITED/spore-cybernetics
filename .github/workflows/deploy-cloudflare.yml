@@ -17,6 +17,11 @@ on:
       - 'vite.config.ts'
       - '.github/workflows/deploy-cloudflare.yml'
 
+# Serialize Cloudflare changes: concurrent secret writes can fail with Cloudflare error 11024.
+concurrency:
+  group: spore-cybernetics-cloudflare-deploy
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
