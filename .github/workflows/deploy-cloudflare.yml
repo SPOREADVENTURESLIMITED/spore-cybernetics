@@ -16,7 +16,7 @@ jobs:
           node-version: 22
       - run: npm install
 
-      - name: Replace workers.dev account subdomain
+      - name: Set workers.dev account subdomain
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -25,52 +25,60 @@ jobs:
           API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain"
           STATUS=$(curl -sS -o /tmp/workers-subdomain.json -w "%{http_code}" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" "$API")
-          if [ "$STATUS" != "200" ]; then
+          CURRENT=""
+          if [ "$STATUS" = "200" ]; then
+            CURRENT=$(jq -r '.result.subdomain // empty' /tmp/workers-subdomain.json)
+          elif [ "$STATUS" != "404" ]; then
             echo "Could not read current workers.dev subdomain (HTTP $STATUS):"
             jq '{success, errors, messages}' /tmp/workers-subdomain.json
             exit 1
           fi
-          CURRENT=$(jq -r '.result.subdomain // empty' /tmp/workers-subdomain.json)
+
           if [ "$CURRENT" = "spore-cybernetics" ]; then
             echo "Account already uses spore-cybernetics.workers.dev"
             exit 0
           fi
-          if [ "$CURRENT" != "sporeafrica" ]; then
-            echo "Account subdomain is '$CURRENT', not the expected sporeafrica; refusing unexpected change."
+          if [ "$CURRENT" = "sporeafrica" ]; then
+            echo "Removing existing sporeafrica.workers.dev subdomain..."
+            DELETE_STATUS=$(curl -sS -o /tmp/workers-subdomain-delete.json -w "%{http_code}" \
+              -X DELETE "$API" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}")
+            if [ "$DELETE_STATUS" != "204" ] && [ "$DELETE_STATUS" != "200" ]; then
+              echo "Cloudflare could not remove the old subdomain (HTTP $DELETE_STATUS):"
+              jq '{success, errors, messages}' /tmp/workers-subdomain-delete.json || true
+              exit 1
+            fi
+          elif [ -n "$CURRENT" ]; then
+            echo "Unexpected existing account subdomain '$CURRENT'; refusing change."
             exit 1
-          fi
-
-          echo "Removing the existing sporeafrica.workers.dev account subdomain..."
-          STATUS=$(curl -sS -o /tmp/workers-subdomain-delete.json -w "%{http_code}" \
-            -X DELETE "$API" \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}")
-          if [ "$STATUS" != "200" ] || [ "$(jq -r '.success' /tmp/workers-subdomain-delete.json)" != "true" ]; then
-            echo "Cloudflare could not remove the old subdomain (HTTP $STATUS):"
-            jq '{success, errors, messages}' /tmp/workers-subdomain-delete.json
-            exit 1
+          else
+            echo "No account subdomain currently registered; proceeding to create requested one."
           fi
 
           echo "Registering spore-cybernetics.workers.dev..."
-          STATUS=$(curl -sS -o /tmp/workers-subdomain-create.json -w "%{http_code}" \
+          CREATE_STATUS=$(curl -sS -o /tmp/workers-subdomain-create.json -w "%{http_code}" \
             -X PUT "$API" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json" \
             --data '{"subdomain":"spore-cybernetics"}')
-          if [ "$STATUS" = "200" ] && [ "$(jq -r '.success' /tmp/workers-subdomain-create.json)" = "true" ]; then
-            echo "Successfully changed account subdomain to spore-cybernetics.workers.dev"
+          if [ "$CREATE_STATUS" = "200" ] && [ "$(jq -r '.success' /tmp/workers-subdomain-create.json)" = "true" ]; then
+            echo "Successfully set account subdomain to spore-cybernetics.workers.dev"
           else
-            echo "New subdomain registration failed (HTTP $STATUS). Attempting to restore sporeafrica..."
-            jq '{success, errors, messages}' /tmp/workers-subdomain-create.json
-            RESTORE_STATUS=$(curl -sS -o /tmp/workers-subdomain-restore.json -w "%{http_code}" \
-              -X PUT "$API" \
-              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              --data '{"subdomain":"sporeafrica"}')
-            if [ "$RESTORE_STATUS" = "200" ] && [ "$(jq -r '.success' /tmp/workers-subdomain-restore.json)" = "true" ]; then
-              echo "Restored sporeafrica.workers.dev successfully."
-            else
-              echo "WARNING: automatic restoration failed (HTTP $RESTORE_STATUS):"
-              jq '{success, errors, messages}' /tmp/workers-subdomain-restore.json
+            echo "Registration failed (HTTP $CREATE_STATUS):"
+            jq '{success, errors, messages}' /tmp/workers-subdomain-create.json || true
+            if [ "$CURRENT" = "sporeafrica" ]; then
+              echo "Attempting to restore sporeafrica..."
+              RESTORE_STATUS=$(curl -sS -o /tmp/workers-subdomain-restore.json -w "%{http_code}" \
+                -X PUT "$API" \
+                -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                --data '{"subdomain":"sporeafrica"}')
+              if [ "$RESTORE_STATUS" = "200" ] && [ "$(jq -r '.success' /tmp/workers-subdomain-restore.json)" = "true" ]; then
+                echo "Restored sporeafrica.workers.dev successfully."
+              else
+                echo "WARNING: automatic restoration failed (HTTP $RESTORE_STATUS):"
+                jq '{success, errors, messages}' /tmp/workers-subdomain-restore.json || true
+              fi
             fi
             exit 1
           fi
