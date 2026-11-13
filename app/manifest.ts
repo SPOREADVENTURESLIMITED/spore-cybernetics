@@ -11,6 +11,6 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#07100f",
     theme_color: "#07100f",
     orientation: "portrait",
-    icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }]
+    icons: [{ src: "/spore-app-icon.jpg", sizes: "128x128", type: "image/jpeg", purpose: "any maskable" }]
   };
 }
