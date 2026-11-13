@@ -45,8 +45,19 @@ enum PaymentStatus {
   FAILED
   REFUNDED
 }
-enum RefundStatus { REQUESTED APPROVED REJECTED COMPLETED }
-enum QuoteStatus { DRAFT SENT ACCEPTED DECLINED EXPIRED }
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
 
 model User {
   id           String           @id @default(cuid())
@@ -155,7 +166,6 @@ model OrderItem {
   quantity  Int
   unitPrice Decimal  @db.Decimal(12, 2)
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  refunds           Refund[]
   product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
   createdAt DateTime @default(now())
 
@@ -194,6 +204,7 @@ model Payment {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds           Refund[]
 
   @@index([orderId, status])
 }
