@@ -13,7 +13,7 @@ export function MobileNav({accountHref,accountLabel}:Props) {
     </button>
     {open && <div className="mobile-panel">
       <Link href="/services" onClick={close}>Services</Link>
-      <Link href="/shop" onClick={close}>Shop</Link>
+      <Link href="/shop" onClick={close}>Shop</Link><Link href="/booking" onClick={close}>Book a consultation</Link>
       <Link href="/#about" onClick={close}>About</Link>
       <Link href="/#contact" onClick={close}>Contact</Link>
       <Link href={accountHref} onClick={close}>{accountLabel}</Link>
