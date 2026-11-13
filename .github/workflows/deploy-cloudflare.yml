@@ -8,6 +8,7 @@ on:
     paths:
       - 'app/**'
       - 'components/**'
+      - 'lib/**'
       - 'public/**'
       - 'prisma/**'
       - 'package.json'
@@ -126,6 +127,38 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+
+      - name: Configure optional payment gateway secrets
+        shell: bash
+        env:
+          FLW_SECRET_KEY: ${{ secrets.FLW_SECRET_KEY }}
+          FLW_SECRET_HASH: ${{ secrets.FLW_SECRET_HASH }}
+          PESAPAL_CONSUMER_KEY: ${{ secrets.PESAPAL_CONSUMER_KEY }}
+          PESAPAL_CONSUMER_SECRET: ${{ secrets.PESAPAL_CONSUMER_SECRET }}
+          PESAPAL_IPN_ID: ${{ secrets.PESAPAL_IPN_ID }}
+          PESAPAL_ENV: ${{ secrets.PESAPAL_ENV }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          put_secret() {
+            local name="$1" value="$2"
+            if [ -n "$value" ]; then
+              printf '%s' "$value" | npx wrangler secret put "$name" --name spore-cybernetics-platform
+              echo "Configured $name"
+            else
+              echo "$name not configured yet; hosted checkout for that gateway remains disabled."
+            fi
+          }
+          put_secret FLW_SECRET_KEY "$FLW_SECRET_KEY"
+          put_secret FLW_SECRET_HASH "$FLW_SECRET_HASH"
+          put_secret PESAPAL_CONSUMER_KEY "$PESAPAL_CONSUMER_KEY"
+          put_secret PESAPAL_CONSUMER_SECRET "$PESAPAL_CONSUMER_SECRET"
+          put_secret PESAPAL_IPN_ID "$PESAPAL_IPN_ID"
+          if [ -n "$PESAPAL_ENV" ]; then
+            printf '%s' "$PESAPAL_ENV" | npx wrangler secret put PESAPAL_ENV --name spore-cybernetics-platform
+          fi
 
       - name: Deploy Worker
         run: npx @vinext/cloudflare deploy --skip-build
