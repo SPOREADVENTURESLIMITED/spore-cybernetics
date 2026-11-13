@@ -1,37 +1,11 @@
-// Payment currencies supported by the hosted gateway integrations.
-// This is deliberately an explicit allow-list: providers can reject currencies
-// that are not enabled on the merchant account, even when they are ISO-4217 codes.
-export const PAYMENT_CURRENCIES = [
-  {code:"UGX",name:"Ugandan Shilling"},
-  {code:"KES",name:"Kenyan Shilling"},
-  {code:"TZS",name:"Tanzanian Shilling"},
-  {code:"RWF",name:"Rwandan Franc"},
-  {code:"NGN",name:"Nigerian Naira"},
-  {code:"GHS",name:"Ghanaian Cedi"},
-  {code:"ZAR",name:"South African Rand"},
-  {code:"ZMW",name:"Zambian Kwacha"},
-  {code:"MWK",name:"Malawian Kwacha"},
-  {code:"XAF",name:"Central African CFA Franc"},
-  {code:"XOF",name:"West African CFA Franc"},
-  {code:"USD",name:"US Dollar"},
-  {code:"EUR",name:"Euro"},
-  {code:"GBP",name:"Pound Sterling"},
-  {code:"CAD",name:"Canadian Dollar"},
-  {code:"INR",name:"Indian Rupee"},
-  {code:"SLL",name:"Sierra Leonean Leone"},
-  {code:"COP",name:"Colombian Peso"},
-  {code:"EGP",name:"Egyptian Pound"},
-] as const;
-
-export type PaymentCurrency = typeof PAYMENT_CURRENCIES[number]["code"];
-export const PAYMENT_CURRENCY_CODES = PAYMENT_CURRENCIES.map(c => c.code);
-export function isPaymentCurrency(value: string): value is PaymentCurrency {
-  return PAYMENT_CURRENCY_CODES.includes(value as PaymentCurrency);
+// ISO-4217 currency codes offered for catalogue pricing and Pesapal checkout.
+// Provider account and country settings still determine which codes can actually
+// be charged. Flutterwave's documented card currencies are listed separately.
+export const PAYMENT_CURRENCY_CODES = `AED AFN ALL AMD ANG AOA ARS AUD AWG AZN BAM BBD BDT BGN BHD BIF BMD BND BOB BRL BSD BTN BWP BYN BZD CAD CDF CHF CLP CNY COP CRC CUP CVE CZK DJF DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP GEL GHS GIP GMD GNF GTQ GYD HKD HNL HTG HUF IDR ILS INR IQD IRR ISK JMD JOD JPY KES KGS KHR KMF KPW KRW KWD KYD KZT LAK LBP LKR LRD LSL LYD MAD MDL MGA MKD MMK MNT MOP MRU MUR MVR MWK MXN MYR MZN NAD NGN NIO NOK NPR NZD OMR PAB PEN PGK PHP PKR PLN PYG QAR RON RSD RUB RWF SAR SBD SCR SDG SEK SGD SHP SLE SLL SOS SRD SSP STN SVC SYP SZL THB TJS TMT TND TOP TRY TTD TWD TZS UAH UGX USD UYU UZS VES VND VUV WST XAF XCD XOF XPF YER ZAR ZMW ZWL`.split(" ");
+export function isPaymentCurrency(value:string):boolean {
+ return PAYMENT_CURRENCY_CODES.includes(value.toUpperCase());
 }
-
-// The documented Flutterwave card-currency list. Local mobile-money methods
-// remain country/currency-specific and are displayed by Flutterwave checkout.
-export const FLUTTERWAVE_CURRENCIES = new Set<PaymentCurrency>([
-  "GBP","CAD","XAF","COP","EGP","EUR","GHS","KES","INR","NGN","RWF",
-  "SLL","ZAR","TZS","UGX","USD","XOF","ZMW"
+export const FLUTTERWAVE_CURRENCIES = new Set([
+ "GBP","CAD","XAF","COP","EGP","EUR","GHS","KES","INR","NGN","RWF",
+ "SLL","ZAR","TZS","UGX","USD","XOF","ZMW"
 ]);
