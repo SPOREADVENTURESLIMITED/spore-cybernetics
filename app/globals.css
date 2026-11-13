@@ -69,3 +69,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 @keyframes tile-sheen{to{transform:translateX(100%)}}
 @media(max-width:760px){.brand-image img{width:48px;height:48px}.hero-art img{width:min(70%,240px);max-height:240px}.hero:after{display:none}}
 @media(prefers-reduced-motion:reduce){.hero-art:before,.hero-art:after,.tile:hover:before{animation:none!important}}
+
+/* Progressive web app installation */
+.pwa-install-wrap{position:relative;display:inline-flex;align-items:center}
+.pwa-install-btn{white-space:nowrap;padding:11px 14px}
+.pwa-install-help{position:absolute;z-index:50;top:calc(100% + 12px);right:0;width:min(310px,calc(100vw - 32px));padding:18px 38px 16px 16px;border:1px solid rgba(0,229,255,.38);border-radius:13px;background:rgba(4,15,39,.98);box-shadow:0 16px 40px rgba(0,0,0,.42);color:#eaf7ff;font-size:12px;line-height:1.65}
+.pwa-install-help strong{display:block;color:var(--cyan);margin-bottom:6px}
+.pwa-install-help p{margin:0;color:#c4d9f1}
+.pwa-help-close{position:absolute;right:9px;top:9px;border:0;background:transparent;color:#c4d9f1;cursor:pointer}
+.pwa-inline-icon{display:inline;vertical-align:middle}
+@media(max-width:900px){.pwa-install-wrap{width:100%}.pwa-install-btn{width:100%}.pwa-install-help{left:0;right:auto}}
