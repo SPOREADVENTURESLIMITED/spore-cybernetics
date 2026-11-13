@@ -189,3 +189,20 @@ model Payment {
 
   @@index([orderId, status])
 }
+
+
+model SiteContent {
+  id            String   @id @default("global")
+  heroTitle     String   @default("Build beyond the ordinary.")
+  heroSubtitle  String   @default("We engineer the technology behind ambitious businesses — from custom software and secure infrastructure to cloud, connected systems and digital commerce.")
+  aboutText     String   @default("We bring software, infrastructure, security and business technology together. Our approach starts with understanding your goals, then designing, implementing and supporting the right solution — locally in Uganda and for organisations operating internationally.")
+  contactEmail  String   @default("info@sporecybernetics.com")
+  contactPhone  String   @default("+256")
+  whatsapp      String   @default("")
+  address       String   @default("Uganda · East Africa")
+  facebook      String   @default("")
+  instagram     String   @default("")
+  linkedin      String   @default("")
+  xUrl          String   @default("")
+  updatedAt     DateTime @updatedAt
+}
