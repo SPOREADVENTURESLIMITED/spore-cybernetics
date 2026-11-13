@@ -204,5 +204,7 @@ model SiteContent {
   instagram     String   @default("")
   linkedin      String   @default("")
   xUrl          String   @default("")
+  bookingFee    Decimal  @default(0) @db.Decimal(12, 2)
+  bookingFeeCurrency String @default("UGX")
   updatedAt     DateTime @updatedAt
 }
