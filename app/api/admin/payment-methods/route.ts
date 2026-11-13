@@ -1,0 +1,9 @@
+import {NextResponse} from "next/server";
+import {z} from "zod";
+import {prisma} from "@/lib/prisma";
+import {requireAdmin} from "@/lib/auth";
+const schema=z.object({name:z.string().min(2).max(100),category:z.enum(["MOBILE_MONEY","BANK","GATEWAY","OTHER"]),network:z.string().max(80).optional().nullable(),accountName:z.string().max(120).optional().nullable(),accountNumber:z.string().max(120).optional().nullable(),merchantCode:z.string().max(80).optional().nullable(),instructions:z.string().min(5).max(2000),currency:z.string().length(3).default("UGX"),enabled:z.boolean().default(true),sortOrder:z.number().int().default(0)});
+export async function GET(){if(!await requireAdmin())return NextResponse.json({error:"Forbidden"},{status:403});return NextResponse.json(await prisma.paymentMethod.findMany({orderBy:{sortOrder:"asc"}}))}
+export async function POST(req:Request){if(!await requireAdmin())return NextResponse.json({error:"Forbidden"},{status:403});try{return NextResponse.json(await prisma.paymentMethod.create({data:schema.parse(await req.json())}),{status:201})}catch{return NextResponse.json({error:"Invalid payment method details."},{status:400})}}
+export async function PATCH(req:Request){if(!await requireAdmin())return NextResponse.json({error:"Forbidden"},{status:403});try{const b=await req.json();const id=z.string().min(1).parse(b.id);const data=schema.partial().parse(b.data);return NextResponse.json(await prisma.paymentMethod.update({where:{id},data}))}catch{return NextResponse.json({error:"Could not update payment method."},{status:400})}}
+export async function DELETE(req:Request){if(!await requireAdmin())return NextResponse.json({error:"Forbidden"},{status:403});try{const {id}=z.object({id:z.string().min(1)}).parse(await req.json());await prisma.paymentMethod.delete({where:{id}});return NextResponse.json({success:true})}catch{return NextResponse.json({error:"Could not delete payment method."},{status:400})}}
