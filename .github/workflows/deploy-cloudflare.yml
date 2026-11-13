@@ -16,7 +16,7 @@ jobs:
           node-version: 22
       - run: npm install
 
-      - name: Register workers.dev account subdomain
+      - name: Change workers.dev account subdomain
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -25,33 +25,28 @@ jobs:
           API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain"
           STATUS=$(curl -sS -o /tmp/workers-subdomain.json -w "%{http_code}" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" "$API")
-          if [ "$STATUS" = "200" ]; then
-            CURRENT=$(jq -r '.result.subdomain // empty' /tmp/workers-subdomain.json)
-            if [ "$CURRENT" = "spore-cybernetics" ]; then
-              echo "workers.dev subdomain already set: ${CURRENT}.workers.dev"
-            elif [ -n "$CURRENT" ]; then
-              echo "This Cloudflare account already uses ${CURRENT}.workers.dev; refusing to replace it."
-              exit 1
-            else
-              echo "Cloudflare returned an unexpected response:"
-              jq '{success, errors, messages}' /tmp/workers-subdomain.json
-              exit 1
-            fi
-          elif [ "$STATUS" = "404" ]; then
-            STATUS=$(curl -sS -o /tmp/workers-subdomain-create.json -w "%{http_code}" \
+          if [ "$STATUS" != "200" ]; then
+            echo "Could not read current workers.dev subdomain (HTTP $STATUS):"
+            jq '{success, errors, messages}' /tmp/workers-subdomain.json
+            exit 1
+          fi
+          CURRENT=$(jq -r '.result.subdomain // empty' /tmp/workers-subdomain.json)
+          if [ "$CURRENT" = "spore-cybernetics" ]; then
+            echo "Account already uses spore-cybernetics.workers.dev"
+          elif [ "$CURRENT" = "sporeafrica" ]; then
+            STATUS=$(curl -sS -o /tmp/workers-subdomain-update.json -w "%{http_code}" \
               -X PUT "$API" \
               -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
               -H "Content-Type: application/json" \
               --data '{"subdomain":"spore-cybernetics"}')
-            if [ "$STATUS" != "200" ] || [ "$(jq -r '.success' /tmp/workers-subdomain-create.json)" != "true" ]; then
-              echo "Cloudflare could not create the workers.dev subdomain (HTTP $STATUS):"
-              jq '{success, errors, messages}' /tmp/workers-subdomain-create.json
+            if [ "$STATUS" != "200" ] || [ "$(jq -r '.success' /tmp/workers-subdomain-update.json)" != "true" ]; then
+              echo "Cloudflare could not change the workers.dev subdomain (HTTP $STATUS):"
+              jq '{success, errors, messages}' /tmp/workers-subdomain-update.json
               exit 1
             fi
-            echo "Created $(jq -r '.result.subdomain' /tmp/workers-subdomain-create.json).workers.dev"
+            echo "Changed account subdomain to $(jq -r '.result.subdomain' /tmp/workers-subdomain-update.json).workers.dev"
           else
-            echo "Could not inspect the workers.dev subdomain (HTTP $STATUS):"
-            jq '{success, errors, messages}' /tmp/workers-subdomain.json
+            echo "Account subdomain is '$CURRENT', not the expected sporeafrica; refusing unexpected change."
             exit 1
           fi
 
