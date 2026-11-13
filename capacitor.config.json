@@ -1,0 +1,12 @@
+{
+  "appId": "com.sporecybernetics.app",
+  "appName": "Spore Cybernetics",
+  "webDir": "www",
+  "server": {
+    "url": "https://spore-cybernetics-platform.spore-cybernetics.workers.dev",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
