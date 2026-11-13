@@ -1,0 +1,3 @@
+import {prisma} from "@/lib/prisma";
+import {BookingForm} from "@/components/booking-form";
+export default async function BookingPage(){const services=await prisma.service.findMany({where:{active:true},orderBy:{sortOrder:"asc"},select:{id:true,name:true}});return <main className="shell" style={{maxWidth:820}}><div className="pagehead"><div className="eyebrow">SPORE CYBERNETICS · APPOINTMENTS</div><h1>Book a <span style={{color:"var(--green)"}}>consultation.</span></h1><p className="lead">Request a service appointment or consultation. Our team will review your preferred date and confirm availability before any payment is due.</p></div><BookingForm services={services}/></main>}
