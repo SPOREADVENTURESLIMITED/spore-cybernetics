@@ -1,0 +1,3 @@
+import {NextResponse} from "next/server";
+import {prisma} from "@/lib/prisma";
+export async function GET(){try{const methods=await prisma.paymentMethod.findMany({where:{enabled:true},orderBy:{sortOrder:"asc"}});return NextResponse.json(methods.map(({id,name,category,network,accountName,accountNumber,merchantCode,instructions,currency})=>({id,name,category,network,accountName,accountNumber,merchantCode,instructions,currency})));}catch{return NextResponse.json({error:"Payment methods are temporarily unavailable."},{status:500})}}
