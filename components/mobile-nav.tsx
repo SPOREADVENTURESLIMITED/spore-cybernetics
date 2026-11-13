@@ -17,6 +17,7 @@ export function MobileNav({accountHref,accountLabel}:Props) {
       <Link href="/#about" onClick={close}>About</Link>
       <Link href="/#contact" onClick={close}>Contact</Link>
       <Link href={accountHref} onClick={close}>{accountLabel}</Link>
+      <PwaInstallButton/>
       <Link className="btn" href="/#contact" onClick={close}>Get a solution ↗</Link>
     </div>}
   </>;
