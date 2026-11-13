@@ -2,6 +2,19 @@ name: Deploy Spore Cybernetics to Cloudflare
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'public/**'
+      - 'prisma/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'cloudflare.config.ts'
+      - 'vite.config.ts'
+      - '.github/workflows/deploy-cloudflare.yml'
 
 permissions:
   contents: read
