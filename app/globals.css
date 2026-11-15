@@ -97,3 +97,22 @@ button:disabled{opacity:.58;cursor:not-allowed;transform:none}
  .pwa-install-wrap{width:100%}
  .pwa-install-btn{width:100%}
 }
+
+/* Ensure inline two-column layouts collapse on narrow devices. */
+@media (max-width: 760px) {
+  .grid[style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .shell,
+  .section,
+  main,
+  .panel,
+  .tile {
+    min-width: 0;
+  }
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+  }
+}
