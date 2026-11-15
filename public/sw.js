@@ -1,53 +1,69 @@
-const CACHE_NAME = "spore-cybernetics-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/icon.svg"];
+const CACHE_NAME = "spore-cybernetics-v2";
+const APP_SHELL = ["/manifest.webmanifest", "/icon.svg"];
 
-self.addEventListener("install", event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
-      .catch(() => {})
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await Promise.allSettled(APP_SHELL.map((asset) => cache.add(asset)));
+      await self.skipWaiting();
+    })()
   );
 });
 
-self.addEventListener("activate", event => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith("spore-cybernetics-") && key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      );
+      await self.clients.claim();
+    })()
   );
 });
 
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/") ||
-      url.pathname.startsWith("/admin") || url.pathname.startsWith("/portal") ||
-      url.pathname.startsWith("/payment")) return;
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/admin") ||
+    url.pathname.startsWith("/portal") ||
+    url.pathname.startsWith("/payment") ||
+    url.pathname.startsWith("/login") ||
+    url.pathname.startsWith("/register")
+  ) return;
 
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put("/", copy));
+  const isNavigation = request.mode === "navigate";
+  const isStaticAsset =
+    url.pathname.startsWith("/_next/static/") ||
+    /\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?)$/i.test(url.pathname);
+  if (!isNavigation && !isStaticAsset) return;
+
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      try {
+        const response = await fetch(request);
+        if (response.ok && response.type === "basic") {
+          await cache.put(request, response.clone());
         }
         return response;
-      }).catch(() => caches.match(request).then(cached => cached || caches.match("/")))
-    );
-    return;
-  }
-
-  if (url.pathname.startsWith("/_next/static/") || /\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?)$/i.test(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then(cached => cached || fetch(request).then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+      } catch {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        if (isNavigation) {
+          const home = await cache.match("/");
+          if (home) return home;
         }
-        return response;
-      }))
-    );
-  }
+        return Response.error();
+      }
+    })()
+  );
 });
