@@ -1,1 +1,1 @@
-import {NextResponse} from "next/server";import {clearSession} from "@/lib/auth";export async function POST(){await clearSession();return NextResponse.json({ok:true})}
+import {NextResponse} from "next/server";import {clearSession} from "@/lib/auth";import {hasSafeRequestOrigin} from "@/lib/request-security";export async function POST(req:Request){if(!hasSafeRequestOrigin(req))return NextResponse.json({error:"Cross-site request rejected."},{status:403});await clearSession();return NextResponse.json({ok:true},{headers:{"Cache-Control":"no-store"}})}
