@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { ContactForm } from "@/components/contact-form";
 const icons:any={code:Code2,globe:Globe,monitor:Monitor,network:Network,"shield-check":ShieldCheck,cloud:Cloud,"brain-circuit":BrainCircuit,megaphone:Megaphone,camera:Camera,headset:Headset,"graduation-cap":GraduationCap,"building-2":Building2,cpu:Cpu,package:Package,layers:Layers};
 export default async function Home(){
- const [services,content]=await Promise.all([prisma.service.findMany({where:{active:true,featured:true},orderBy:{sortOrder:"asc"},take:6}),prisma.siteContent.findUnique({where:{id:"global"}})]);
+ let services:any[]=[];let content:any=null;
+ try{[services,content]=await Promise.all([prisma.service.findMany({where:{active:true,featured:true},orderBy:{sortOrder:"asc"},take:6}),prisma.siteContent.findUnique({where:{id:"global"}})]);}
+ catch(error){console.error("Homepage data temporarily unavailable:",error);}
  const title=content?.heroTitle||"Build beyond the ordinary.";
  const [first,...rest]=title.split(" ");
  return <main>
