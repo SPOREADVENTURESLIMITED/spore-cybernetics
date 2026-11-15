@@ -79,3 +79,40 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .pwa-help-close{position:absolute;right:9px;top:9px;border:0;background:transparent;color:#c4d9f1;cursor:pointer}
 .pwa-inline-icon{display:inline;vertical-align:middle}
 @media(max-width:900px){.pwa-install-wrap{width:100%}.pwa-install-btn{width:100%}.pwa-install-help{left:0;right:auto}}
+
+/* Production repair: prevent narrow-screen overflow in enquiry and checkout forms. */
+.form-contact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.checkout-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.panel:has(>.table){overflow-x:auto}
+.table{min-width:560px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+button:disabled{opacity:.58;cursor:not-allowed;transform:none}
+@media(max-width:760px){
+ .form-contact-grid,.checkout-grid{grid-template-columns:minmax(0,1fr)!important}
+ .footer{flex-direction:column;align-items:flex-start}
+ .section-head{align-items:flex-start;flex-direction:column}
+ .toolbar{flex-wrap:wrap}
+ .toolbar input{max-width:100%;width:100%}
+ .row{flex-wrap:wrap}
+ .pwa-install-wrap{width:100%}
+ .pwa-install-btn{width:100%}
+}
+
+/* Ensure inline two-column layouts collapse on narrow devices. */
+@media (max-width: 760px) {
+  .grid[style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .shell,
+  .section,
+  main,
+  .panel,
+  .tile {
+    min-width: 0;
+  }
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+  }
+}

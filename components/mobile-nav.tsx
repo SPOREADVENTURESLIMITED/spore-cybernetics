@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { PwaInstallButton } from "@/components/pwa-install-button";
 
 type Props = { accountHref: string; accountLabel: string };
 export function MobileNav({accountHref,accountLabel}:Props) {
@@ -18,7 +17,6 @@ export function MobileNav({accountHref,accountLabel}:Props) {
       <Link href="/#about" onClick={close}>About</Link>
       <Link href="/#contact" onClick={close}>Contact</Link>
       <Link href={accountHref} onClick={close}>{accountLabel}</Link>
-      <PwaInstallButton/>
       <Link className="btn" href="/#contact" onClick={close}>Get a solution ↗</Link>
     </div>}
   </>;

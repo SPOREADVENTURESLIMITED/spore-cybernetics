@@ -1,78 +1,9 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
-
-type InstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-};
-
-export function PwaInstallButton() {
-  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch((error) => {
-        console.error("Spore app service worker registration failed:", error);
-      });
-    }
-
-    const standalone = window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
-    if (standalone) setInstalled(true);
-
-    const onBeforeInstall = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as InstallPromptEvent);
-    };
-    const onInstalled = () => {
-      setInstalled(true);
-      setInstallPrompt(null);
-      setShowHelp(false);
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    window.addEventListener("appinstalled", onInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-      window.removeEventListener("appinstalled", onInstalled);
-    };
-  }, []);
-
-  const install = async () => {
-    if (!installPrompt) {
-      setShowHelp(true);
-      return;
-    }
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    if (choice.outcome === "accepted") setInstallPrompt(null);
-  };
-
-  return (
-    <div className="pwa-install-wrap" style={{ padding: "10px 18px", display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 10 }}>
-      <button type="button" className="btn pwa-install-btn" onClick={install} disabled={installed} aria-label="Install Spore Cybernetics app">
-        <Smartphone size={16} /> {installed ? "App Installed" : "Install Spore App"}
-      </button>
-      {showHelp && (
-        <div role="dialog" aria-modal="true" aria-labelledby="pwa-install-help-title" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.72)", display: "grid", placeItems: "center", padding: 20 }}>
-          <div style={{ position: "relative", width: "min(100%, 420px)", background: "#07152f", color: "#fff", border: "1px solid #28436c", borderRadius: 16, padding: 24 }}>
-            <button type="button" onClick={() => setShowHelp(false)} aria-label="Close install instructions" style={{ position: "absolute", right: 14, top: 14, background: "transparent", color: "inherit", border: 0 }}><X size={20} /></button>
-            <h2 id="pwa-install-help-title">Install Spore Cybernetics</h2>
-            <p>To add the online app to your Android home screen:</p>
-            <ol style={{ paddingLeft: 22, lineHeight: 1.8 }}>
-              <li>Open this website in Google Chrome.</li>
-              <li>Tap Chrome’s three-dot menu (⋮).</li>
-              <li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
-              <li>Confirm by tapping <strong>Install</strong> or <strong>Add</strong>.</li>
-            </ol>
-            <p style={{ fontSize: 13, opacity: .8 }}>If the install option is missing, update Chrome and reopen this website over HTTPS.</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import {useEffect,useState} from "react";
+import {Download,X} from "lucide-react";
+type InstallPromptEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:"accepted"|"dismissed";platform:string}>};
+function instructions(){const ua=navigator.userAgent;const ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);if(ios)return{heading:"Install on iPhone or iPad",steps:["Open this website in Safari (not an in-app browser).","Tap the Share button.","Scroll down and choose Add to Home Screen.","Tap Add to confirm."],note:"iOS installs web apps through Safari's Share menu."};if(/Android/i.test(ua))return{heading:"Install on Android",steps:["Open this website in Chrome.","Tap the three-dot menu (⋮).","Choose Install app or Add to Home screen.","Confirm the installation."],note:"If the option is missing, update Chrome and reopen this HTTPS website."};return{heading:"Install on your computer",steps:["Open this website in Google Chrome or Microsoft Edge.","Use the install icon in the address bar, or open the browser menu.","Choose Install Spore Cybernetics and confirm."],note:"Install availability depends on browser support. Firefox desktop does not currently offer the same PWA install flow."};}
+export function PwaInstallButton(){const[prompt,setPrompt]=useState<InstallPromptEvent|null>(null);const[installed,setInstalled]=useState(false);const[help,setHelp]=useState(false);const[guide,setGuide]=useState<ReturnType<typeof instructions>|null>(null);
+useEffect(()=>{if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js",{scope:"/"}).catch(error=>console.error("Service worker registration failed:",error));if(window.matchMedia("(display-mode: standalone)").matches||(navigator as Navigator&{standalone?:boolean}).standalone===true)setInstalled(true);const before=(event:Event)=>{event.preventDefault();setPrompt(event as InstallPromptEvent)};const done=()=>{setInstalled(true);setPrompt(null);setHelp(false)};window.addEventListener("beforeinstallprompt",before);window.addEventListener("appinstalled",done);return()=>{window.removeEventListener("beforeinstallprompt",before);window.removeEventListener("appinstalled",done)};},[]);
+async function install(){if(!prompt){setGuide(instructions());setHelp(true);return;}try{await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==="accepted")setPrompt(null);}catch(error){console.error("Install prompt failed:",error);setGuide(instructions());setHelp(true);}}
+return <div className="pwa-install-wrap" style={{display:"flex",justifyContent:"center",flexWrap:"wrap",gap:10}}><button type="button" className="btn pwa-install-btn" onClick={install} disabled={installed} aria-label="Install Spore Cybernetics app"><Download size={16}/>{installed?"App Installed":"Install Spore App"}</button>{help&&guide&&<div role="dialog" aria-modal="true" aria-labelledby="pwa-help-title" style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.72)",display:"grid",placeItems:"center",padding:20}}><div style={{position:"relative",width:"min(100%,420px)",background:"#07152f",color:"#fff",border:"1px solid #28436c",borderRadius:16,padding:24}}><button type="button" onClick={()=>setHelp(false)} aria-label="Close install instructions" style={{position:"absolute",right:14,top:14,background:"transparent",color:"inherit",border:0}}><X size={20}/></button><h2 id="pwa-help-title">{guide.heading}</h2><ol style={{paddingLeft:22,lineHeight:1.8}}>{guide.steps.map(step=><li key={step}>{step}</li>)}</ol><p style={{fontSize:13,opacity:.8}}>{guide.note}</p></div></div>}</div>;}
