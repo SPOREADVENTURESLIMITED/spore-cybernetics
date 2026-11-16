@@ -1,1 +1,8 @@
-import Link from "next/link";import {AuthForm} from "@/components/auth-form";export default function Login(){return <main className="shell" style={{maxWidth:520}}><div className="pagehead"><div className="eyebrow">CLIENT ACCESS</div><h1>Welcome <span style={{color:"var(--green)"}}>back.</span></h1><p className="muted">Sign in to track your requests and orders.</p></div><AuthForm mode="login"/><p className="muted small">New to Spore? <Link href="/register" style={{color:"var(--green)"}}>Create an account</Link></p></main>}
+import Link from "next/link";
+import {AuthForm} from "@/components/auth-form";
+export default function Login(){return <main className="shell" style={{maxWidth:520}}>
+ <div className="pagehead"><div className="eyebrow">CLIENT ACCESS</div><h1>Welcome <span style={{color:"var(--green)"}}>back.</span></h1><p className="muted">Sign in to track your requests and orders.</p></div>
+ <AuthForm mode="login"/>
+ <p className="muted small">New to Spore? <Link href="/register" style={{color:"var(--green)"}}>Create an account</Link></p>
+ <p className="muted small">Administrator? <Link href="/admin/login" style={{color:"var(--green)"}}>Admin sign in</Link></p>
+ </main>}
