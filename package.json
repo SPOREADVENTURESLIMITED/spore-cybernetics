@@ -12,7 +12,9 @@
     "build:vinext": "prisma generate && vite build",
     "start:vinext": "vite preview",
     "deploy:vinext": "vinext-cloudflare deploy",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "prebuild:vinext": "node scripts/generate-pwa-icons.mjs",
+    "predeploy:vinext": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
