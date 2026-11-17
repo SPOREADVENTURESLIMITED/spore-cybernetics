@@ -17,10 +17,10 @@ jobs:
     env:
       PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://spore-cybernetics-platform.spore-cybernetics.workers.dev' }}
     steps:
-      - name: Check out the deployed revision
+      - name: Check out the current browser test suite
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
