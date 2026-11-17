@@ -112,16 +112,20 @@ test('PDF integrity endpoint rejects a non-PDF upload', async ({ request }) => {
   expect(response.status()).toBe(415);
 });
 
-test('authorised administrator issues a sealed PDF, verifies its fingerprint and revokes the record', async ({ page }) => {\n  test.setTimeout(90000);\n  test.setTimeout(90000);
+test('authorised administrator issues a sealed PDF, verifies its fingerprint and revokes the record', async ({ page }) => {
+  test.setTimeout(90000);
   const email = process.env.TEST_ADMIN_EMAIL;
   const password = process.env.TEST_ADMIN_PASSWORD;
   test.skip(!email || !password, 'Temporary authorised administrator fixture is not configured.');
+
   await page.goto('/admin/login');
   await page.locator('input[name="email"]').fill(email!);
   await page.locator('input[name="password"]').fill(password!);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.waitForURL(/\/admin(?:\/|$)/);
+  await page.waitForURL(url => url.pathname === '/admin');
   await page.goto('/admin/documents');
+  await expect(page.getByRole('heading', { name: /Document registry/i })).toBeVisible();
+  await expect(page.locator('input[type="file"][accept="application/pdf,.pdf"]')).toBeAttached();
 
   const sourcePdf = await PDFDocument.create();
   const sourcePage = sourcePdf.addPage([595, 842]);
@@ -138,7 +142,7 @@ test('authorised administrator issues a sealed PDF, verifies its fingerprint and
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Issue document & generate QR' }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/^SC-\\d{4}-[A-F0-9]{24}-authenticated\\.pdf$/);
+  expect(download.suggestedFilename()).toMatch(/^SC-\d{4}-[A-F0-9]{24}-authenticated\.pdf$/);
   const reference = download.suggestedFilename().replace('-authenticated.pdf', '');
   const sealedPdf = await readFile(await download.path());
   expect(sealedPdf.subarray(0, 5).toString()).toBe('%PDF-');
