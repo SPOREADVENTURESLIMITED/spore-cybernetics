@@ -49,7 +49,7 @@ export const prisma = new Proxy({} as PrismaClient, {
           );
         }
         return withPrismaClient(async (client) => {
-          const method = Reflect.get(client, property, client);
+          const method = Reflect.get(client, property, client) as (...args: any[]) => Promise<unknown>;
           return await method.apply(client, [first, ...rest]);
         });
       };
