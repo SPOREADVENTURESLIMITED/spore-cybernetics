@@ -1,24 +1,58 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import "./globals.css";
-import { SiteNav } from "@/components/site-nav";
-import { PwaInstallButton } from "@/components/pwa-install-button";
-import { prisma } from "@/lib/prisma";
-export const metadata: Metadata = {title:"Spore Cybernetics | Technology for What's Next",description:"End-to-end ICT services, software, infrastructure, cloud, cybersecurity and digital commerce in Uganda and worldwide.",applicationName:"Spore Cybernetics",manifest:"/manifest.webmanifest",themeColor:"#061a48",icons:{icon:[{url:"/icon.svg",type:"image/svg+xml"}],apple:[{url:"/icon.svg",type:"image/svg+xml"}]},appleWebApp:{capable:true,title:"Spore Cybernetics",statusBarStyle:"black-translucent"}};
-export default async function RootLayout({children}:{children:React.ReactNode}) {
- let content:{address:string|null;contactEmail:string|null}|null=null;
- try { content=await prisma.siteContent.findUnique({where:{id:"global"},select:{address:true,contactEmail:true}}); }
- catch(error) { console.error("Unable to load footer site content:",error); }
- const email=content?.contactEmail||"info@sporecybernetics.com";
- return <html lang="en"><body><SiteNav/><PwaInstallButton/>{children}<footer className="footer shell"><div>© {new Date().getFullYear()} Spore Cybernetics. All rights reserved.</div><div>{content?.address||"Uganda · East Africa · Worldwide"} · <a href={"mailto:"+email}>{email}</a></div><div><Link href="/#contact">Contact</Link> · <Link href="/services">Services</Link></div></footer></body></html>;
-}
+# Spore Cybernetics — Full-stack platform
+
+A dynamic Next.js-compatible application built with React, TypeScript, PostgreSQL and Prisma. It includes customer authentication, a central administrator, a service catalogue, service enquiries, product catalogue, order workflow and customer portal.
+
+## Architecture
+- **Frontend:** React 19, TypeScript, Next-compatible App Router through Vinext.
+- **Application/API:** Server-rendered pages and route handlers.
+- **Database:** PostgreSQL with Prisma ORM and Neon adapter.
+- **Authentication:** Signed HTTP-only session cookie; bcrypt password hashes; CUSTOMER / ADMIN roles.
+- **Commerce:** Product catalogue, stock validation, order records and payment-ready order workflow.
+- **Administration:** Central administrator dashboard and management workflows.
+- **Deployment:** Cloudflare Workers/Pages via Vinext Cloudflare adapter; PostgreSQL database connection required.
+
+## Run locally
+1. Install Node.js 20.9+ and PostgreSQL/Neon.
+2. Configure `DATABASE_URL`, `AUTH_SECRET` (32+ random characters), `ADMIN_EMAIL` and a strong `ADMIN_PASSWORD` in the local environment.
+3. Install and prepare:
+   ```bash
+   npm install
+   npx prisma generate
+   npx prisma db push
+   npm run db:seed
+   npm run dev
+   ```
+4. Open the local app and sign in at `/login`.
+
+## Included modules
+- Corporate homepage and ICT service divisions.
+- Dynamic service catalogue and contact/service request workflow.
+- Customer registration, login and protected customer portal.
+- Product catalogue, cart and order request checkout flow.
+- Central admin dashboard, service and product management.
+- Admin-protected APIs and payment configuration placeholders.
+- Document authentication registry, QR verification and revocation.
+
+## Payment and launch readiness
+The order endpoint creates pending orders; it does not collect money. Complete merchant onboarding, webhook verification, reconciliation, refunds and receipts before enabling live payments. Never mark an order paid based only on a browser redirect.
+
+## Security / production checklist
+- Set a unique `AUTH_SECRET` and strong admin password.
+- Keep secrets out of source control.
+- Use HTTPS, managed PostgreSQL backups, database migrations, rate limiting, CSRF/origin checks and centralised logs.
+- Add email/SMS delivery, password reset and email verification before public launch.
+- Verify business contact details, legal terms, privacy policy and service commitments.
+- Run Prisma generation, database schema update, seed (where appropriate), build and end-to-end tests in the target environment.
+
 ## Document authentication and verification
+- Administrator registry: `/admin/documents`.
+- Public verification: `/verify`.
+- Official seal asset: `/spore-authentication-seal.svg`.
+- Each issued document gets a unique reference and opaque verification code.
+- QR codes point to the public verification page and contain only the public reference.
+- Administrators can revoke active records with a reason; expiry is checked during verification.
 
-The administrator-only document registry is available at `/admin/documents`. It issues unique references and opaque verification tokens, supports optional expiry dates and document links, and allows administrators to revoke records with a reason. Public verification is available at `/verify`; each issued record can be checked by its reference or unique verification token.
-
-The Spore Cybernetics authentication seal is served from `/spore-authentication-seal.svg`. After issuing a record, administrators can print the seal with its QR code and attach it to the final document. The QR points to the current site's public verification page and contains only the document reference. QR image rendering currently uses the external QR Server image endpoint; only the public verification URL is sent to that service.
-
-After adding the Prisma model, apply the schema to the configured PostgreSQL database and regenerate the Prisma client before deploying:
+After adding the document model, apply it to the configured PostgreSQL database and regenerate the Prisma client before deploying:
 
 ```bash
 npx prisma db push
@@ -26,4 +60,4 @@ npx prisma generate
 npm run build
 ```
 
-Do not describe a document as verified until the public verification page confirms its active registry record. A printed seal/QR image by itself is not a cryptographic signature of the PDF contents. For stronger tamper evidence, add server-side PDF storage, SHA-256 hash capture at issuance, signed issuance events, and immutable audit logging before treating this as a legal-grade e-signature service.
+The current QR image is rendered by an external QR service using only the public verification URL. A seal and QR code alone do not cryptographically prove that PDF contents have not been changed. Before treating this as a legal-grade e-signature system, add controlled PDF storage, SHA-256 hash capture and verification, signed issuance events, and immutable audit logging.
