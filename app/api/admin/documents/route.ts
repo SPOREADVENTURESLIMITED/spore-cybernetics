@@ -1,6 +1,5 @@
 import {NextResponse} from "next/server";
 import {z} from "zod";
-import {randomUUID} from "node:crypto";
 import {requireAdmin} from "@/lib/auth";
 import {prisma} from "@/lib/prisma";
 import {hasSafeRequestOrigin} from "@/lib/request-security";
@@ -20,9 +19,9 @@ export async function POST(req:Request){
  const admin=await requireAdmin(); if(!admin) return NextResponse.json({error:"Forbidden"},{status:403});
  try {
   const v=schema.parse(await req.json());
-  const reference="SC-"+new Date().getUTCFullYear()+"-"+randomUUID().replace(/-/g,"").slice(0,12).toUpperCase();
+  const reference="SC-"+new Date().getUTCFullYear()+"-"+crypto.randomUUID().replace(/-/g,"").slice(0,12).toUpperCase();
   const document=await prisma.verifiedDocument.create({data:{
-   reference,verificationCode:randomUUID(),title:v.title,documentType:v.documentType,
+   reference,verificationCode:crypto.randomUUID(),title:v.title,documentType:v.documentType,
    recipientName:v.recipientName,recipientEmail:v.recipientEmail||null,
    issuerName:v.issuerName,issuerDepartment:v.issuerDepartment||null,
    expiresAt:v.expiresAt?new Date(v.expiresAt):null,documentUrl:v.documentUrl||null,issuedById:admin.id
