@@ -10,5 +10,5 @@ export default async function RootLayout({children}:{children:React.ReactNode}) 
  try { content=await prisma.siteContent.findUnique({where:{id:"global"},select:{address:true,contactEmail:true}}); }
  catch(error) { console.error("Unable to load footer site content:",error); }
  const email=content?.contactEmail||"info@sporecybernetics.com";
- return <html lang="en"><body><SiteNav/><PwaInstallButton/>{children}<footer className="footer shell"><div>© {new Date().getFullYear()} Spore Cybernetics. All rights reserved.</div><div>{content?.address||"Uganda · East Africa · Worldwide"} · <a href={"mailto:"+email}>{email}</a></div><div><Link href="/#contact">Contact</Link> · <Link href="/services">Services</Link> · <Link href="/verify">Verify a document</Link> · <Link href="/verify">Verify a document</Link></div></footer></body></html>;
+ return <html lang="en"><body><SiteNav/><PwaInstallButton/>{children}<footer className="footer shell"><div>© {new Date().getFullYear()} Spore Cybernetics. All rights reserved.</div><div>{content?.address||"Uganda · East Africa · Worldwide"} · <a href={"mailto:"+email}>{email}</a></div><div><Link href="/#contact">Contact</Link> · <Link href="/services">Services</Link> · <Link href="/verify">Verify a document</Link></div></footer></body></html>;
 }
