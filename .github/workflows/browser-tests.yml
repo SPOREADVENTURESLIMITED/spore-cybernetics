@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
+      DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
       PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://spore-cybernetics-platform.spore-cybernetics.workers.dev' }}
     steps:
       - name: Check out the current browser test suite
@@ -36,11 +37,27 @@ jobs:
       - name: Install project dependencies
         run: npm install
 
+      - name: Generate Prisma clients for temporary administrator fixture
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+
+      - name: Provision isolated temporary administrator for end-to-end test
+        run: npx tsx scripts/admin-e2e-fixture.ts provision
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
       - name: Run browser smoke tests against the deployed website
         run: npm run test:e2e
+
+      - name: Remove temporary administrator and test documents
+        if: always() && env.TEST_ADMIN_ID != ''
+        run: npx tsx scripts/admin-e2e-fixture.ts cleanup
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
 
       - name: Upload Playwright report
         if: always()
