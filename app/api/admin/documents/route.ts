@@ -31,7 +31,8 @@ export async function POST(req:Request){
   const reference="SC-"+new Date().getUTCFullYear()+"-"+crypto.randomUUID().replace(/-/g,"").slice(0,24).toUpperCase();
   const verificationCode=crypto.randomUUID();
   const publicOrigin=req.headers.get("origin")||"https://spore-cybernetics-platform.spore-cybernetics.workers.dev";
-  const verificationUrl=publicOrigin.replace(/\\/+$/,"")+"/verify?code="+encodeURIComponent(reference);
+  const verificationBase=publicOrigin.endsWith("/")?publicOrigin.slice(0,-1):publicOrigin;
+  const verificationUrl=verificationBase+"/verify?code="+encodeURIComponent(reference);
   const pdf=await PDFDocument.load(original,{ignoreEncryption:false});
   const seal=await pdf.embedPng(sealBytes);
   const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
