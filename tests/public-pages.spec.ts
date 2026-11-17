@@ -88,8 +88,16 @@ test('official document authentication seal is served', async ({ request }) => {
   expect(await response.text()).toContain('SPORE CYBERNETICS');
 });
 
-test('homepage hides incomplete contact details and unset social prompts', async ({ page }) => {
+test('homepage displays the configured business phone and hides unset social prompts', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.contact-details').getByText('Phone / WhatsApp', { exact: true })).toHaveCount(0);
+  await expect(page.locator('.contact-details').getByText('+256 392 903 604')).toBeVisible();
+  await expect(page.locator('.contact-details').getByRole('link', { name: 'WhatsApp us' })).toHaveAttribute('href', 'https://wa.me/256392903604');
   await expect(page.getByText(/add link in admin/i)).toHaveCount(0);
+});
+
+test('PDF integrity endpoint rejects a non-PDF upload', async ({ request }) => {
+  const response = await request.post('/api/verify-document', {
+    multipart: { reference: 'SC-INVALID-PDF-TEST', file: { name: 'not-a-pdf.pdf', mimeType: 'application/pdf', buffer: Buffer.from('not a PDF') } },
+  });
+  expect(response.status()).toBe(415);
 });
