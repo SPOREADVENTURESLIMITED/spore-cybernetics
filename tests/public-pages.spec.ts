@@ -38,6 +38,14 @@ test('PWA manifest and service worker are available', async ({ page, request }) 
   expect(workerResponse.ok()).toBeTruthy();
 });
 
+test('parallel server renders do not leak request context', async ({ request }) => {
+  const routes = ['/', '/services', '/shop', '/booking', '/verify?code=SC-INVALID-PARALLEL-TEST'];
+  const responses = await Promise.all(routes.map(route => request.get(route)));
+  for (const [index, response] of responses.entries()) {
+    expect(response.status(), `Unexpected HTTP status for ${routes[index]}`).toBeLessThan(400);
+  }
+});
+
 for (const viewport of [{ width: 390, height: 844 }, { width: 1365, height: 900 }]) {
   test(`homepage and navigation fit viewport ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);
