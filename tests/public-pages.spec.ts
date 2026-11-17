@@ -160,6 +160,7 @@ test('authorised administrator issues a sealed PDF, verifies its fingerprint and
   expect(integrity.ok()).toBeTruthy();
   expect((await integrity.json()).match).toBe(true);
 
+  await page.goto('/admin/documents');
   const recordRow = page.getByRole('row').filter({ hasText: reference });
   await expect(recordRow).toBeVisible();
   page.once('dialog', dialog => dialog.accept('Controlled automated QA revocation test.'));
