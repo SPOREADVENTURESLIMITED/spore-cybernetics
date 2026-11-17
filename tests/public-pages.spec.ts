@@ -139,9 +139,15 @@ test('authorised administrator issues a sealed PDF, verifies its fingerprint and
   await page.locator('input[name="recipientName"]').fill('Automated QA Recipient');
   await page.locator('input[name="recipientEmail"]').fill('qa@example.invalid');
   await page.locator('input[name="issuerName"]').fill('Spore Cybernetics QA');
-  const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Issue sealed PDF & register' }).click();
-  const download = await downloadPromise;
+  const issueResponse = await page.waitForResponse(response => response.url().includes('/api/admin/documents') && response.request().method() === 'POST', { timeout: 25000 }).catch(() => null);
+  if (!issueResponse) {
+    const clientError = await page.locator('[role="alert"]').textContent().catch(() => 'No client error was displayed.');
+    throw new Error('PDF issuance request was not sent. ' + clientError);
+  }
+  const issueBody = await issueResponse.json().catch(() => ({}));
+  expect(issueResponse.status(), JSON.stringify(issueBody)).toBe(201);
+  const download = await page.waitForEvent('download', { timeout: 20000 });
   expect(download.suggestedFilename()).toMatch(/^SC-\d{4}-[A-F0-9]{24}-authenticated\.pdf$/);
   const reference = download.suggestedFilename().replace('-authenticated.pdf', '');
   const sealedPdf = await readFile(await download.path());
