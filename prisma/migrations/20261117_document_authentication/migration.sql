@@ -1,6 +1,10 @@
-CREATE TYPE "VerifiedDocumentStatus" AS ENUM ('ACTIVE', 'REVOKED');
+DO $ BEGIN
+  CREATE TYPE "VerifiedDocumentStatus" AS ENUM ('ACTIVE', 'REVOKED');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $;
 
-CREATE TABLE "VerifiedDocument" (
+CREATE TABLE IF NOT EXISTS "VerifiedDocument" (
   "id" TEXT NOT NULL,
   "reference" TEXT NOT NULL,
   "verificationCode" TEXT NOT NULL,
@@ -24,7 +28,7 @@ CREATE TABLE "VerifiedDocument" (
   CONSTRAINT "VerifiedDocument_issuedById_fkey" FOREIGN KEY ("issuedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
-CREATE UNIQUE INDEX "VerifiedDocument_reference_key" ON "VerifiedDocument"("reference");
-CREATE UNIQUE INDEX "VerifiedDocument_verificationCode_key" ON "VerifiedDocument"("verificationCode");
-CREATE INDEX "VerifiedDocument_status_issuedAt_idx" ON "VerifiedDocument"("status", "issuedAt");
-CREATE INDEX "VerifiedDocument_recipientEmail_idx" ON "VerifiedDocument"("recipientEmail");
+CREATE UNIQUE INDEX IF NOT EXISTS "VerifiedDocument_reference_key" ON "VerifiedDocument"("reference");
+CREATE UNIQUE INDEX IF NOT EXISTS "VerifiedDocument_verificationCode_key" ON "VerifiedDocument"("verificationCode");
+CREATE INDEX IF NOT EXISTS "VerifiedDocument_status_issuedAt_idx" ON "VerifiedDocument"("status", "issuedAt");
+CREATE INDEX IF NOT EXISTS "VerifiedDocument_recipientEmail_idx" ON "VerifiedDocument"("recipientEmail");
