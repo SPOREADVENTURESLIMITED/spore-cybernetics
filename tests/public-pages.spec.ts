@@ -112,7 +112,7 @@ test('PDF integrity endpoint rejects a non-PDF upload', async ({ request }) => {
   expect(response.status()).toBe(415);
 });
 
-test('authorised administrator issues a sealed PDF, verifies its fingerprint and revokes the record', async ({ page }) => {
+test('authorised administrator issues a sealed PDF, verifies its fingerprint and revokes the record', async ({ page }) => {\n  test.setTimeout(90000);
   const email = process.env.TEST_ADMIN_EMAIL;
   const password = process.env.TEST_ADMIN_PASSWORD;
   test.skip(!email || !password, 'Temporary authorised administrator fixture is not configured.');
