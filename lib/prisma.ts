@@ -14,21 +14,16 @@ import { PrismaClient } from "../generated/client/client";
  */
 function createPrismaClient(): PrismaClient {
   const connectionString = env.DATABASE_URL;
-
   if (!connectionString) {
     throw new Error("Cloudflare DATABASE_URL secret is not configured.");
   }
-
-  return new PrismaClient({
-    adapter: new PrismaNeon({ connectionString }),
-  });
+  return new PrismaClient({ adapter: new PrismaNeon({ connectionString }) });
 }
 
 async function withPrismaClient<T>(
   operation: (client: PrismaClient) => Promise<T>,
 ): Promise<T> {
   const client = createPrismaClient();
-
   try {
     return await operation(client);
   } finally {
@@ -37,13 +32,27 @@ async function withPrismaClient<T>(
 }
 
 /**
- * Keep the existing prisma.model.operation call sites unchanged while
- * ensuring every operation owns its own PrismaClient lifecycle.
+ * Preserve prisma.model.operation call sites without sharing a PrismaClient
+ * between Worker invocations. Use callback-style transactions so all work in
+ * a transaction shares the same isolated client. Array-style transactions are
+ * rejected because their PrismaPromises would belong to separate clients.
  */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, property) {
-    if (typeof property === "symbol") {
-      return Reflect.get(_target, property);
+    if (typeof property === "symbol") return Reflect.get(_target, property);
+
+    if (property === "$transaction") {
+      return (first: unknown, ...rest: unknown[]) => {
+        if (Array.isArray(first)) {
+          return Promise.reject(
+            new Error("Use callback-style Prisma transactions on Cloudflare Workers."),
+          );
+        }
+        return withPrismaClient(async (client) => {
+          const method = Reflect.get(client, property, client);
+          return await method.apply(client, [first, ...rest]);
+        });
+      };
     }
 
     if (property.startsWith("$")) {
@@ -55,27 +64,19 @@ export const prisma = new Proxy({} as PrismaClient, {
         });
     }
 
-    return new Proxy(
-      {},
-      {
-        get(_delegate, operation) {
-          if (typeof operation === "symbol") return undefined;
-
-          return (...args: unknown[]) =>
-            withPrismaClient(async (client) => {
-              const delegate = Reflect.get(client, property, client);
-              const method = Reflect.get(delegate, operation, delegate);
-
-              if (typeof method !== "function") {
-                throw new TypeError(
-                  `Unsupported Prisma operation: ${property}.${operation}`,
-                );
-              }
-
-              return await method.apply(delegate, args);
-            });
-        },
+    return new Proxy({}, {
+      get(_delegate, operation) {
+        if (typeof operation === "symbol") return undefined;
+        return (...args: unknown[]) =>
+          withPrismaClient(async (client) => {
+            const delegate = Reflect.get(client, property, client);
+            const method = Reflect.get(delegate, operation, delegate);
+            if (typeof method !== "function") {
+              throw new TypeError(`Unsupported Prisma operation: ${property}.${operation}`);
+            }
+            return await method.apply(delegate, args);
+          });
       },
-    );
+    });
   },
 });
