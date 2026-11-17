@@ -61,3 +61,12 @@ npm run build
 ```
 
 The current QR image is rendered by an external QR service using only the public verification URL. A seal and QR code alone do not cryptographically prove that PDF contents have not been changed. Before treating this as a legal-grade e-signature system, add controlled PDF storage, SHA-256 hash capture and verification, signed issuance events, and immutable audit logging.
+
+
+## Automated Cloudflare deployment
+The GitHub Actions workflow `.github/workflows/deploy.yml` runs on relevant pushes to `main` and can also be started manually. Configure these GitHub Actions production environment secrets before the workflow can complete:
+- `DATABASE_URL`: PostgreSQL connection string for the production database migration.
+- `CLOUDFLARE_API_TOKEN`: token with the permissions required by the configured Cloudflare Worker deployment.
+- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account identifier.
+
+The deployed Worker must also already have its runtime `DATABASE_URL` and `AUTH_SECRET` secrets configured in Cloudflare. The workflow does not print or expose secret values. A failed workflow must be checked in GitHub Actions before claiming the service is live.
