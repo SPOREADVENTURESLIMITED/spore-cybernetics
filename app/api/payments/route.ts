@@ -2,11 +2,12 @@ import {NextResponse} from "next/server";
 import {z} from "zod";
 import {prisma} from "@/lib/prisma";
 import {FLUTTERWAVE_CURRENCIES,isPaymentCurrency} from "@/lib/payment-currencies";
+import {hasSafeRequestOrigin} from "@/lib/request-security";
 const schema=z.object({reference:z.string().min(5).max(80),email:z.string().email(),phone:z.string().min(7).max(24).optional(),provider:z.enum(["FLUTTERWAVE","PESAPAL"])});
 const site=()=> (process.env.NEXT_PUBLIC_SITE_URL||"https://spore-cybernetics-platform.spore-cybernetics.workers.dev").replace(/\/$/,"");
 const base=()=>process.env.PESAPAL_ENV==="live"?"https://pay.pesapal.com/v3":"https://cybqa.pesapal.com/pesapalv3";
 async function pesapalToken(){const key=process.env.PESAPAL_CONSUMER_KEY,secret=process.env.PESAPAL_CONSUMER_SECRET;if(!key||!secret)throw new Error("Pesapal credentials are missing.");const r=await fetch(base()+"/api/Auth/RequestToken",{method:"POST",headers:{"Accept":"application/json","Content-Type":"application/json"},body:JSON.stringify({consumer_key:key,consumer_secret:secret})});const d=await r.json() as any;if(!r.ok||!d.token)throw new Error(d.message||"Pesapal authentication failed.");return d.token as string;}
-export async function POST(req:Request){let paymentId:string|undefined;try{
+export async function POST(req:Request){if(!hasSafeRequestOrigin(req))return NextResponse.json({error:"Cross-site request rejected."},{status:403});let paymentId:string|undefined;try{
  const v=schema.parse(await req.json());const order=await prisma.order.findUnique({where:{reference:v.reference}});
  if(!order||order.email.toLowerCase()!==v.email.toLowerCase())return NextResponse.json({error:"Order not found. Check the checkout email and reference."},{status:404});
  if(order.status!=="PENDING")return NextResponse.json({error:"This order is not awaiting payment."},{status:409});
