@@ -23,6 +23,10 @@ jobs:
         run: npx prisma validate
         env:
           DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+      - name: Generate Prisma clients
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
       - name: Type-check application
         run: npx tsc --noEmit
       - name: Build Worker
