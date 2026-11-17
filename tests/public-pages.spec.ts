@@ -20,9 +20,17 @@ test('registration and login forms render', async ({ page }) => {
   await expect(page.getByLabel('Password')).toBeVisible();
 });
 
-test('admin pages and dashboard API deny unauthenticated visitors', async ({ page }) => {
+test('admin pages and document issue/revoke APIs deny unauthenticated visitors', async ({ page }) => {
   const api = await page.request.get('/api/admin/dashboard');
   expect(api.status()).toBe(403);
+  await page.goto('/admin/login');
+  const protectedActions = await page.evaluate(async () => {
+    const issue = await fetch('/api/admin/documents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Test certificate', documentType: 'Certificate', recipientName: 'Test recipient', issuerName: 'Spore Cybernetics' }) });
+    const revoke = await fetch('/api/admin/documents/not-a-real-document', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'Unauthorised test request' }) });
+    return { issue: issue.status, revoke: revoke.status };
+  });
+  expect(protectedActions.issue).toBe(403);
+  expect(protectedActions.revoke).toBe(403);
   await page.goto('/admin');
   await expect(page).toHaveURL(/login/);
 });
