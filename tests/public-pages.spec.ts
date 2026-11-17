@@ -140,7 +140,7 @@ test('authorised administrator issues a sealed PDF, verifies its fingerprint and
   await page.locator('input[name="recipientEmail"]').fill('qa@example.invalid');
   await page.locator('input[name="issuerName"]').fill('Spore Cybernetics QA');
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Issue document & generate QR' }).click();
+  await page.getByRole('button', { name: 'Issue sealed PDF & register' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^SC-\d{4}-[A-F0-9]{24}-authenticated\.pdf$/);
   const reference = download.suggestedFilename().replace('-authenticated.pdf', '');
