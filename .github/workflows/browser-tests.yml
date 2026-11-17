@@ -1,8 +1,9 @@
 name: Spore Cybernetics browser tests
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["Deploy Spore Cybernetics to Cloudflare"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -10,13 +11,16 @@ permissions:
 
 jobs:
   browser-smoke-tests:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://spore-cybernetics-platform.spore-cybernetics.workers.dev' }}
     steps:
-      - name: Check out repository
+      - name: Check out the deployed revision
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,7 +34,7 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run browser smoke tests against the live website
+      - name: Run browser smoke tests against the deployed website
         run: npm run test:e2e
 
       - name: Upload Playwright report
