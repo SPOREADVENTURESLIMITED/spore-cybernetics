@@ -23,6 +23,8 @@ jobs:
         run: npx prisma validate
         env:
           DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+      - name: Type-check application
+        run: npx tsc --noEmit
       - name: Build Worker
         run: npm run build:vinext
         env:
