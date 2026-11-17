@@ -13,7 +13,10 @@ export async function POST(req:Request){
   const vd=await vr.json() as any,tx=vd?.data;if(!vr.ok||vd.status!=="success"||!tx)return NextResponse.json({error:"Could not verify transaction."},{status:502});
   const p=await prisma.payment.findFirst({where:{provider:"FLUTTERWAVE",providerReference:String(tx.tx_ref)},include:{order:true}});
   if(!p||tx.status!=="successful"||tx.currency!==p.currency||Number(tx.amount)<Number(p.amount))return NextResponse.json({received:true,verified:false});
-  await prisma.$transaction([prisma.payment.update({where:{id:p.id},data:{status:"SUCCESS",paidAt:new Date(),metadata:{...(p.metadata as any||{}),verifiedTransactionId:String(tx.id)}}}),prisma.order.update({where:{id:p.orderId},data:{status:"CONFIRMED"}})]);
+  await prisma.$transaction(async db=>{
+   await db.payment.update({where:{id:p.id},data:{status:"SUCCESS",paidAt:new Date(),metadata:{...(p.metadata as any||{}),verifiedTransactionId:String(tx.id)}}});
+   await db.order.update({where:{id:p.orderId},data:{status:"CONFIRMED"}});
+  });
   return NextResponse.json({received:true,verified:true});
  }catch{return NextResponse.json({error:"Webhook processing failed."},{status:500})}
 }
