@@ -50,7 +50,8 @@ export async function POST(req:Request){
   page.drawLine({start:{x:64,y:75},end:{x:531,y:75},thickness:1,color:navy});
   page.drawText("Spore Cybernetics · Official digital document authentication",{x:64,y:57,size:8,font:regular,color:muted});
   const sealedBytes=await pdf.save();
-  const digest=await crypto.subtle.digest("SHA-256",sealedBytes);
+  const digestInput=new Uint8Array(sealedBytes.length);digestInput.set(sealedBytes);
+  const digest=await crypto.subtle.digest("SHA-256",digestInput.buffer);
   const documentHash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
   const document=await prisma.verifiedDocument.create({data:{reference,verificationCode,title:v.title,documentType:v.documentType,recipientName:v.recipientName,recipientEmail:v.recipientEmail||null,issuerName:v.issuerName,issuerDepartment:v.issuerDepartment||null,expiresAt:v.expiresAt?new Date(v.expiresAt):null,documentUrl:v.documentUrl||null,documentHash,issuedById:admin.id}});
   let binary="";for(let i=0;i<sealedBytes.length;i+=0x8000)binary+=String.fromCharCode(...sealedBytes.subarray(i,i+0x8000));
