@@ -1,0 +1,53 @@
+name: Deploy Spore Cybernetics
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "prisma/**"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.*"
+      - "wrangler.*"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: spore-cybernetics-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out production branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Apply additive document-authentication database migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL" || (echo "DATABASE_URL secret is required" && exit 1)
+          npx prisma db execute --file prisma/migrations/20261117_document_authentication/migration.sql --schema prisma/schema.prisma
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Build application
+        run: npm run build
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || (echo "CLOUDFLARE_API_TOKEN secret is required" && exit 1)
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "CLOUDFLARE_ACCOUNT_ID secret is required" && exit 1)
+          npm run deploy:vinext
