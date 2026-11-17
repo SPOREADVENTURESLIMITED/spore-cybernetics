@@ -30,7 +30,8 @@ export async function POST(req:Request){
   if(sealBytes[0]!==137||sealBytes[1]!==80||sealBytes[2]!==78||sealBytes[3]!==71)throw new Error("Authentication seal image is invalid.");
   const reference="SC-"+new Date().getUTCFullYear()+"-"+crypto.randomUUID().replace(/-/g,"").slice(0,24).toUpperCase();
   const verificationCode=crypto.randomUUID();
-  const verificationUrl=new URL("/verify?code="+encodeURIComponent(reference),req.url).toString();
+  const publicOrigin=req.headers.get("origin")||"https://spore-cybernetics-platform.spore-cybernetics.workers.dev";
+  const verificationUrl=publicOrigin.replace(/\\/+$/,"")+"/verify?code="+encodeURIComponent(reference);
   const pdf=await PDFDocument.load(original,{ignoreEncryption:false});
   const seal=await pdf.embedPng(sealBytes);
   const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
