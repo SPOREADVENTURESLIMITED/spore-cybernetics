@@ -5,6 +5,20 @@ export default defineConfig({
     name: "spore-cybernetics-platform",
     entrypoint: "vinext/server/fetch-handler",
     compatibilityDate: "2026-11-12",
+    observability: {
+      enabled: true,
+      headSamplingRate: 1,
+      redactQueryString: true,
+      logs: {
+        enabled: true,
+        headSamplingRate: 1,
+        invocationLogs: true,
+        persist: true,
+      },
+      issues: {
+        enabled: true,
+      },
+    },
     assets: {
       htmlHandling: "none",
       notFoundHandling: "none",
