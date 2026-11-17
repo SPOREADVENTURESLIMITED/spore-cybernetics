@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const publicRoutes = ['/', '/services', '/shop', '/booking', '/login', '/register'];
+const publicRoutes = ['/', '/services', '/shop', '/booking', '/quote', '/login', '/register', '/admin/login'];
 
 for (const route of publicRoutes) {
   test(`public page ${route} responds successfully`, async ({ page }) => {
@@ -39,7 +39,7 @@ test('PWA manifest and service worker are available', async ({ page, request }) 
 });
 
 test('parallel server renders do not leak request context', async ({ request }) => {
-  const routes = ['/', '/services', '/shop', '/booking', '/verify?code=SC-INVALID-PARALLEL-TEST'];
+  const routes = ['/', '/services', '/shop', '/booking', '/quote', '/admin/login', '/verify?code=SC-INVALID-PARALLEL-TEST'];
   const responses = await Promise.all(routes.map(route => request.get(route)));
   for (const [index, response] of responses.entries()) {
     expect(response.status(), `Unexpected HTTP status for ${routes[index]}`).toBeLessThan(400);
