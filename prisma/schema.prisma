@@ -70,6 +70,7 @@ model User {
   orders       Order[]
   quotations   Quotation[]
   expenses     Expense[]
+  issuedDocuments VerifiedDocument[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
@@ -292,4 +293,35 @@ model StockMovement {
   createdAt   DateTime @default(now())
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   @@index([productId, createdAt])
+}
+
+enum VerifiedDocumentStatus {
+  ACTIVE
+  REVOKED
+}
+
+model VerifiedDocument {
+  id                String                 @id @default(cuid())
+  reference         String                 @unique
+  verificationCode  String                 @unique
+  title             String
+  documentType      String
+  recipientName     String
+  recipientEmail    String?
+  issuerName        String
+  issuerDepartment  String?
+  issuedAt          DateTime               @default(now())
+  expiresAt         DateTime?
+  documentUrl       String?
+  documentHash      String?
+  status            VerifiedDocumentStatus @default(ACTIVE)
+  revokedAt         DateTime?
+  revocationReason  String?
+  issuedById        String
+  issuedBy          User                   @relation(fields: [issuedById], references: [id], onDelete: Restrict)
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@index([status, issuedAt])
+  @@index([recipientEmail])
 }
