@@ -1,51 +1,29 @@
-# Spore Cybernetics — Full-stack platform
+import type { Metadata } from "next";
+import Link from "next/link";
+import "./globals.css";
+import { SiteNav } from "@/components/site-nav";
+import { PwaInstallButton } from "@/components/pwa-install-button";
+import { prisma } from "@/lib/prisma";
+export const metadata: Metadata = {title:"Spore Cybernetics | Technology for What's Next",description:"End-to-end ICT services, software, infrastructure, cloud, cybersecurity and digital commerce in Uganda and worldwide.",applicationName:"Spore Cybernetics",manifest:"/manifest.webmanifest",themeColor:"#061a48",icons:{icon:[{url:"/icon.svg",type:"image/svg+xml"}],apple:[{url:"/icon.svg",type:"image/svg+xml"}]},appleWebApp:{capable:true,title:"Spore Cybernetics",statusBarStyle:"black-translucent"}};
+export default async function RootLayout({children}:{children:React.ReactNode}) {
+ let content:{address:string|null;contactEmail:string|null}|null=null;
+ try { content=await prisma.siteContent.findUnique({where:{id:"global"},select:{address:true,contactEmail:true}}); }
+ catch(error) { console.error("Unable to load footer site content:",error); }
+ const email=content?.contactEmail||"info@sporecybernetics.com";
+ return <html lang="en"><body><SiteNav/><PwaInstallButton/>{children}<footer className="footer shell"><div>© {new Date().getFullYear()} Spore Cybernetics. All rights reserved.</div><div>{content?.address||"Uganda · East Africa · Worldwide"} · <a href={"mailto:"+email}>{email}</a></div><div><Link href="/#contact">Contact</Link> · <Link href="/services">Services</Link></div></footer></body></html>;
+}
+## Document authentication and verification
 
-A dynamic Next.js 15 + React + TypeScript application with PostgreSQL/Prisma, secure customer authentication, a single central administrator, a service catalogue, service enquiry workflow, product catalogue, order creation, customer portal and admin management.
+The administrator-only document registry is available at `/admin/documents`. It issues unique references and opaque verification tokens, supports optional expiry dates and document links, and allows administrators to revoke records with a reason. Public verification is available at `/verify`; each issued record can be checked by its reference or unique verification token.
 
-## Architecture
-- **Frontend:** Next.js App Router, React 19, responsive custom design system.
-- **Application/API:** Next.js server components and route handlers.
-- **Database:** PostgreSQL with Prisma ORM.
-- **Authentication:** Signed, HTTP-only session cookie; bcrypt password hashes; CUSTOMER / ADMIN roles.
-- **Commerce:** Product catalogue, stock validation, order records and payment-ready order workflow.
-- **Administration:** One central ADMIN role; staff/departments are deliberately not enabled in this first release.
-- **Deployment:** Any Node.js hosting platform that supports Next.js plus a managed PostgreSQL database.
+The Spore Cybernetics authentication seal is served from `/spore-authentication-seal.svg`. After issuing a record, administrators can print the seal with its QR code and attach it to the final document. The QR points to the current site's public verification page and contains only the document reference. QR image rendering currently uses the external QR Server image endpoint; only the public verification URL is sent to that service.
 
-## Run locally
-1. Install Node.js 20.9+ and PostgreSQL.
-2. Copy `.env.example` to `.env` and set `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, and a strong `ADMIN_PASSWORD`.
-3. Install and prepare:
-   ```bash
-   npm install
-   npx prisma generate
-   npx prisma db push
-   npm run db:seed
-   npm run dev
-   ```
-4. Open http://localhost:3000 and sign in to `/login` using the admin credentials configured before seeding.
+After adding the Prisma model, apply the schema to the configured PostgreSQL database and regenerate the Prisma client before deploying:
 
-## Included modules
-- Corporate homepage and 14 seeded ICT service divisions.
-- Dynamic service catalogue from PostgreSQL.
-- Contact / service request submissions with reference numbers.
-- Customer registration, login and protected customer portal.
-- Product catalogue, browser cart and order-request checkout flow.
-- Order creation API with stock and currency validation.
-- Central admin dashboard, service and product creation, and service-request status/notes workflow.
-- Admin-protected APIs for catalogue writes and request status updates.
-- Payment model and provider configuration placeholders for card and Mobile Money integrations.
+```bash
+npx prisma db push
+npx prisma generate
+npm run build
+```
 
-## Payment and launch readiness
-The order endpoint currently creates a **pending order**; it does not collect money. Before enabling live checkout, complete and test the relevant merchant integrations (MTN MoMo Collections, Airtel Money where available, and/or Stripe), webhook signature verification, reconciliation, refunds and customer receipts. Never mark an order paid based only on a browser redirect. Use verified provider callbacks/webhooks.
-
-## Security / production checklist
-- Set a unique `AUTH_SECRET` (32+ random characters) and strong admin password.
-- Keep `.env` out of source control. Rotate credentials if exposed.
-- Use HTTPS, managed PostgreSQL backups, database migrations, rate limiting, CSRF/origin checks, bot protection and centralised logs.
-- Add email/SMS delivery, password reset, email verification and privacy/terms pages before public launch.
-- Add product images from approved sources and verify all stock/prices.
-- Confirm business contact email, phone, physical address, service commitments and legal details.
-- Run `npm install`, `npx prisma generate`, `npx prisma db push`, `npm run db:seed`, and `npm run build` in the target environment.
-
-## Important
-This is a deployable full-stack starter implementation, not a live deployment. The database and payment credentials must be configured, and live payment provider onboarding/testing is required before accepting customer payments.
+Do not describe a document as verified until the public verification page confirms its active registry record. A printed seal/QR image by itself is not a cryptographic signature of the PDF contents. For stronger tamper evidence, add server-side PDF storage, SHA-256 hash capture at issuance, signed issuance events, and immutable audit logging before treating this as a legal-grade e-signature service.
