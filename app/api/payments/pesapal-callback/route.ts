@@ -11,7 +11,13 @@ async function check(trackingId:string,merchantReference?:string){
  const p=await prisma.payment.findFirst({where:{provider:"PESAPAL",providerReference:trackingId},include:{order:true}});
  if(!p|| (merchantReference&&merchantReference!==(p.metadata as any)?.pesapalMerchantReference))return null;
  const complete=d.payment_status_description==="COMPLETED"&&d.currency===p.currency&&Number(d.amount)>=Number(p.amount);
- if(complete){await prisma.$transaction([prisma.payment.update({where:{id:p.id},data:{status:"SUCCESS",paidAt:new Date(),metadata:{...(p.metadata as any||{}),pesapalStatus:d.payment_status_description,confirmationCode:d.confirmation_code||null}}}),prisma.order.update({where:{id:p.orderId},data:{status:"CONFIRMED"}})]);return p.order.reference;}
+ if(complete){
+  await prisma.$transaction(async db=>{
+   await db.payment.update({where:{id:p.id},data:{status:"SUCCESS",paidAt:new Date(),metadata:{...(p.metadata as any||{}),pesapalStatus:d.payment_status_description,confirmationCode:d.confirmation_code||null}}});
+   await db.order.update({where:{id:p.orderId},data:{status:"CONFIRMED"}});
+  });
+  return p.order.reference;
+ }
  if(["FAILED","REVERSED","INVALID"].includes(d.payment_status_description||""))await prisma.payment.update({where:{id:p.id},data:{status:"FAILED",metadata:{...(p.metadata as any||{}),pesapalStatus:d.payment_status_description}}});
  return null;
 }
