@@ -16,6 +16,9 @@ on:
       - 'cloudflare.config.ts'
       - 'vite.config.ts'
       - '.github/workflows/deploy-cloudflare.yml'
+      - '.github/workflows/browser-tests.yml'
+      - 'tests/**'
+      - 'playwright.config.ts'
 
 # Serialize Cloudflare changes: concurrent secret writes can fail with Cloudflare error 11024.
 concurrency:
