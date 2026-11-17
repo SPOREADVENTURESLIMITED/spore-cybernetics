@@ -13,7 +13,7 @@ const schema=z.object({
  issuerName:z.string().trim().min(2).max(140),
  issuerDepartment:z.string().trim().max(100).optional(),
  expiresAt:z.string().datetime().optional().or(z.literal("")),
- documentUrl:z.string().url().refine(v=>new URL(v).protocol==="https:").optional().or(z.literal("")),
+ documentUrl:z.string().url().refine(v=>v.startsWith("https://"),{message:"Document URLs must use HTTPS."}).optional().or(z.literal("")),
  documentPdfBase64:z.string().min(1).max(14_000_000),
  sealPngBase64:z.string().min(1).max(2_000_000)
 });
