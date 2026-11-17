@@ -2,30 +2,80 @@ import { env } from "cloudflare:workers";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "../generated/client/client";
 
-const globalForPrisma = globalThis as typeof globalThis & {
-  sporePrisma?: PrismaClient;
-};
+/**
+ * Cloudflare Workers have request-scoped async contexts. A module-level
+ * PrismaClient/Neon pool can carry pending promises from one invocation into
+ * another; workerd cancels those continuations and may fail the request with
+ * Error 1101. Create an isolated client for each database operation instead.
+ *
+ * DATABASE_URL must be the pooled Neon connection string. Each operation is
+ * awaited before its client is disconnected, so no database promise is left
+ * running in a later request context.
+ */
+function createPrismaClient(): PrismaClient {
+  const connectionString = env.DATABASE_URL;
 
-function getPrismaClient(): PrismaClient {
-  if (!globalForPrisma.sporePrisma) {
-    const connectionString = env.DATABASE_URL;
-
-    if (!connectionString) {
-      throw new Error("Cloudflare DATABASE_URL secret is not configured.");
-    }
-
-    globalForPrisma.sporePrisma = new PrismaClient({
-      adapter: new PrismaNeon({ connectionString }),
-    });
+  if (!connectionString) {
+    throw new Error("Cloudflare DATABASE_URL secret is not configured.");
   }
 
-  return globalForPrisma.sporePrisma;
+  return new PrismaClient({
+    adapter: new PrismaNeon({ connectionString }),
+  });
 }
 
+async function withPrismaClient<T>(
+  operation: (client: PrismaClient) => Promise<T>,
+): Promise<T> {
+  const client = createPrismaClient();
+
+  try {
+    return await operation(client);
+  } finally {
+    await client.$disconnect();
+  }
+}
+
+/**
+ * Keep the existing prisma.model.operation call sites unchanged while
+ * ensuring every operation owns its own PrismaClient lifecycle.
+ */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, property) {
-    const client = getPrismaClient();
-    const value = Reflect.get(client, property, client);
-    return typeof value === "function" ? value.bind(client) : value;
+    if (typeof property === "symbol") {
+      return Reflect.get(_target, property);
+    }
+
+    if (property.startsWith("$")) {
+      return (...args: unknown[]) =>
+        withPrismaClient(async (client) => {
+          const method = Reflect.get(client, property, client);
+          if (typeof method !== "function") return method;
+          return await method.apply(client, args);
+        });
+    }
+
+    return new Proxy(
+      {},
+      {
+        get(_delegate, operation) {
+          if (typeof operation === "symbol") return undefined;
+
+          return (...args: unknown[]) =>
+            withPrismaClient(async (client) => {
+              const delegate = Reflect.get(client, property, client);
+              const method = Reflect.get(delegate, operation, delegate);
+
+              if (typeof method !== "function") {
+                throw new TypeError(
+                  `Unsupported Prisma operation: ${property}.${operation}`,
+                );
+              }
+
+              return await method.apply(delegate, args);
+            });
+        },
+      },
+    );
   },
 });
