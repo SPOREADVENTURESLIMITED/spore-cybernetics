@@ -87,3 +87,9 @@ test('official document authentication seal is served', async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   expect(await response.text()).toContain('SPORE CYBERNETICS');
 });
+
+test('homepage hides incomplete contact details and unset social prompts', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Phone / WhatsApp', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/add link in admin/i)).toHaveCount(0);
+});
