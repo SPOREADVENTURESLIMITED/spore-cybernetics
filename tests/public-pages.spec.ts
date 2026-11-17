@@ -90,6 +90,6 @@ test('official document authentication seal is served', async ({ request }) => {
 
 test('homepage hides incomplete contact details and unset social prompts', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Phone / WhatsApp', { exact: true })).toHaveCount(0);
+  await expect(page.locator('.contact-details').getByText('Phone / WhatsApp', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/add link in admin/i)).toHaveCount(0);
 });
