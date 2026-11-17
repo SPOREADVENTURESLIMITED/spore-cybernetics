@@ -60,3 +60,22 @@ test('homepage has no uncaught browser errors', async ({ page }) => {
   await expect(page.locator('body')).not.toBeEmpty();
   expect(pageErrors).toEqual([]);
 });
+
+test('document verification portal rejects an unknown reference', async ({ page }) => {
+  await page.goto('/verify');
+  await expect(page.getByRole('heading', { name: /Document verification/i })).toBeVisible();
+  await page.goto('/verify?code=SC-INVALID-PLAYWRIGHT-TEST');
+  await expect(page.getByRole('heading', { name: 'Document not found' })).toBeVisible();
+});
+
+test('document registry is restricted to authenticated administrators', async ({ page }) => {
+  await page.goto('/admin/documents');
+  await expect(page.getByRole('heading', { name: /Administrator sign in required/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Go to administrator sign in' })).toHaveAttribute('href', '/admin/login');
+});
+
+test('official document authentication seal is served', async ({ request }) => {
+  const response = await request.get('/spore-authentication-seal.svg');
+  expect(response.ok()).toBeTruthy();
+  expect(await response.text()).toContain('SPORE CYBERNETICS');
+});
