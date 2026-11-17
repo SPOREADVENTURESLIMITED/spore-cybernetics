@@ -1,11 +1,6 @@
 name: Spore Cybernetics browser tests
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'tests/**'
-      - 'playwright.config.ts'
   workflow_run:
     workflows: ["Deploy Spore Cybernetics to Cloudflare"]
     types: [completed]
@@ -16,7 +11,7 @@ permissions:
 
 jobs:
   browser-smoke-tests:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
