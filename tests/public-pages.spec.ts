@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { readFile } from 'node:fs/promises';
 
 const publicRoutes = ['/', '/services', '/shop', '/booking', '/quote', '/login', '/register', '/admin/login'];
 
@@ -108,4 +110,51 @@ test('PDF integrity endpoint rejects a non-PDF upload', async ({ request }) => {
     multipart: { reference: 'SC-INVALID-PDF-TEST', file: { name: 'not-a-pdf.pdf', mimeType: 'application/pdf', buffer: Buffer.from('not a PDF') } },
   });
   expect(response.status()).toBe(415);
+});
+
+test('authorised administrator issues a sealed PDF, verifies its fingerprint and revokes the record', async ({ page }) => {
+  const email = process.env.TEST_ADMIN_EMAIL;
+  const password = process.env.TEST_ADMIN_PASSWORD;
+  test.skip(!email || !password, 'Temporary authorised administrator fixture is not configured.');
+  await page.goto('/admin/login');
+  await page.locator('input[name="email"]').fill(email!);
+  await page.locator('input[name="password"]').fill(password!);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.waitForURL(/\/admin(?:\/|$)/);
+  await page.goto('/admin/documents');
+
+  const sourcePdf = await PDFDocument.create();
+  const sourcePage = sourcePdf.addPage([595, 842]);
+  const font = await sourcePdf.embedFont(StandardFonts.Helvetica);
+  sourcePage.drawText('Controlled Spore Cybernetics QA document - not for customer use.', { x: 60, y: 760, size: 12, font });
+  const pdfBytes = Buffer.from(await sourcePdf.save());
+  await page.locator('input[type="file"][accept="application/pdf,.pdf"]').setInputFiles({
+    name: 'controlled-admin-test.pdf', mimeType: 'application/pdf', buffer: pdfBytes,
+  });
+  await page.locator('input[name="title"]').fill('Controlled administrator QA certificate');
+  await page.locator('input[name="recipientName"]').fill('Automated QA Recipient');
+  await page.locator('input[name="recipientEmail"]').fill('qa@example.invalid');
+  await page.locator('input[name="issuerName"]').fill('Spore Cybernetics QA');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Issue document & generate QR' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^SC-\\d{4}-[A-F0-9]{24}-authenticated\\.pdf$/);
+  const reference = download.suggestedFilename().replace('-authenticated.pdf', '');
+  const sealedPdf = await readFile(await download.path());
+  expect(sealedPdf.subarray(0, 5).toString()).toBe('%PDF-');
+
+  const integrity = await page.request.post('/api/verify-document', {
+    multipart: { reference, file: { name: download.suggestedFilename(), mimeType: 'application/pdf', buffer: sealedPdf } },
+  });
+  expect(integrity.ok()).toBeTruthy();
+  expect((await integrity.json()).match).toBe(true);
+
+  const recordRow = page.getByRole('row').filter({ hasText: reference });
+  await expect(recordRow).toBeVisible();
+  page.once('dialog', dialog => dialog.accept('Controlled automated QA revocation test.'));
+  await recordRow.getByRole('button', { name: 'Revoke' }).click();
+  await expect(recordRow).toContainText('REVOKED');
+
+  await page.goto('/verify?code=' + encodeURIComponent(reference));
+  await expect(page.getByRole('heading', { name: 'REVOKED' })).toBeVisible();
 });
